@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "comedy": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "@modelcontextprotocol/inspector",
+        "--port=6278",
+        "dotnet",
+        "run",
+        "--urls=https://comedymcpserver-jg5b0.kinsta.app"
+      ]
+    }
+  }
+} 
