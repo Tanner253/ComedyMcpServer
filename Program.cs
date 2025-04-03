@@ -60,6 +60,23 @@ public static class ComedyTool
         }
     }
 
+    // Tool to get a funny comment for code
+    [McpServerTool, Description("Gets a funny comment related to specific code context.")]
+    public static async Task<string> GetCodeComment(string codeContext, string topic, IServiceProvider serviceProvider)
+    {
+        var comedyService = serviceProvider.GetRequiredService<IComedyService>();
+        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        try
+        {
+            return await comedyService.GetFunnyCommentAsync(codeContext, topic);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting funny code comment.");
+            return $"// Even my joke generator crashed! Must be some seriously complex code. (Context: {codeContext})";
+        }
+    }
+
     // Example tool showing how to access services
     [McpServerTool, Description("Echoes the message back, using ILogger.")]
     public static string EchoWithLog(string message, IServiceProvider serviceProvider)

@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json; // Requires System.Net.Http.Json NuGet package
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace ComedyMcpServer.Services;
 
@@ -61,9 +62,10 @@ public class PlaceholderComedyService : IComedyService
             }
 
             _logger.LogInformation($"Successfully fetched joke: '{jokeResponse.Joke}'");
-            // Combine the joke with the original comment context (optional)
-            return $"// {jokeResponse.Joke} (Relates to: {originalComment})";
-
+            
+            // Format the joke based on the context
+            string formattedJoke = FormatJokeForContext(jokeResponse.Joke, originalComment, topic);
+            return formattedJoke;
         }
         catch (HttpRequestException httpEx)
         {
@@ -80,5 +82,72 @@ public class PlaceholderComedyService : IComedyService
             _logger.LogError(ex, "Unexpected error fetching joke for comment: {Comment}", originalComment);
             return $"// An unexpected error occurred while trying to be funny. Ironic, isn't it? (Original: {originalComment})";
         }
+    }
+
+    private string FormatJokeForContext(string joke, string originalComment, string topic)
+    {
+        // Extract code context for better joke formatting
+        var codeContext = ParseCodeContext(originalComment);
+        
+        switch (codeContext.Type)
+        {
+            case "variable":
+                return FormatVariableJoke(joke, codeContext.Name, codeContext.Value);
+            case "function":
+                return FormatFunctionJoke(joke, codeContext.Name);
+            case "class":
+                return FormatClassJoke(joke, codeContext.Name);
+            default:
+                return $"// {joke}\n// (Relates to: {originalComment})";
+        }
+    }
+
+    private (string Type, string Name, string Value) ParseCodeContext(string code)
+    {
+        // Simple parsing of code context
+        code = code.Trim();
+        
+        // Variable declaration pattern (e.g., "int a = 5")
+        if (code.Contains("="))
+        {
+            var parts = code.Split('=').Select(p => p.Trim()).ToArray();
+            var varParts = parts[0].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return ("variable", varParts.Last(), parts[1].TrimEnd(';'));
+        }
+        
+        // Function pattern
+        if (code.Contains("("))
+        {
+            var name = code.Split('(')[0].Trim();
+            return ("function", name, "");
+        }
+        
+        // Class pattern
+        if (code.Contains("class"))
+        {
+            var name = code.Split("class")[1].Trim();
+            return ("class", name, "");
+        }
+
+        return ("unknown", "", "");
+    }
+
+    private string FormatVariableJoke(string joke, string varName, string value)
+    {
+        // Create variable-specific joke format
+        var prefix = $"// Variable {varName} walks into a bar...";
+        return $"{prefix}\n// {joke}\n// (Fun fact: Even {value} would laugh at that one!)";
+    }
+
+    private string FormatFunctionJoke(string joke, string funcName)
+    {
+        // Create function-specific joke format
+        return $"// Function {funcName} says:\n// {joke}\n// (Warning: This joke has O(n) complexity!)";
+    }
+
+    private string FormatClassJoke(string joke, string className)
+    {
+        // Create class-specific joke format
+        return $"// Class {className} inherits from Humor:\n// {joke}\n// (Implements ILaughable)";
     }
 } 
