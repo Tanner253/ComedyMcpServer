@@ -1,0 +1,15 @@
+{
+  "name": "comedy-mcp-server",
+  "version": "1.0.0",
+  "description": "Comedy MCP Server for Cursor",
+  "main": "index.js",
+  "bin": {
+    "comedy-mcp-server": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["mcp", "cursor", "comedy"],
+  "author": "",
+  "license": "ISC"
+} 

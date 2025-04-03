@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Builder;
 // Command to run with the inspector tool:
 // npx @modelcontextprotocol/inspector dotnet run
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 // Configure logging
 builder.Logging.ClearProviders(); // Optional: Remove default providers
@@ -33,9 +33,21 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var host = builder.Build();
+var app = builder.Build();
 
-await host.RunAsync();
+// Configure the HTTP request pipeline
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+
+// Add a health check endpoint
+app.MapGet("/", () => "Comedy MCP Server is running!");
+
+// Run both the web app and MCP server
+await app.RunAsync();
 
 // --- Tool Definitions ---
 
