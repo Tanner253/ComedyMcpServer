@@ -1,118 +1,71 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ModelContextProtocol.Server; // Assuming this namespace based on SDK patterns
+using ModelContextProtocol.Server;
 using System.ComponentModel;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
-using System;
+using ComedyMcpServer.Services;
+using Microsoft.AspNetCore.Builder;
 
-// Define the Joke API response structure
-public class JokeApiResponse
-{
-    public string? Type { get; set; }
-    public string? Joke { get; set; }
-    public string? Setup { get; set; }
-    public string? Delivery { get; set; }
-    public bool Error { get; set; } // JokeAPI indicates errors with this flag
-}
+// Command to run with the inspector tool:
+// npx @modelcontextprotocol/inspector dotnet run
 
-public class Program
-{
-    // Shared HttpClient for joke fetching - configured once
-    private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(10) };
+var builder = Host.CreateApplicationBuilder(args);
 
-    public static async Task Main(string[] args)
-    {
-        var builder = Host.CreateApplicationBuilder(args);
+// Configure logging
+builder.Logging.ClearProviders(); // Optional: Remove default providers
+builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+builder.Logging.SetMinimumLevel(LogLevel.Debug); // Set minimum log level
 
-        // Configure console logging to stderr
-        builder.Logging.AddConsole(consoleLogOptions =>
-        {
-            consoleLogOptions.LogToStandardErrorThreshold = LogLevel.Trace;
-        });
+// Register services
+builder.Services.AddHttpClient(); // Register IHttpClientFactory
+builder.Services.AddSingleton<IComedyService, PlaceholderComedyService>();
 
-        // Configure MCP Server services
-        builder.Services
-            .AddMcpServer() // Add MCP server core services
-            .WithStdioServerTransport() // Use standard I/O for communication (required for MCP Inspector)
-            .WithToolsFromAssembly(); // Automatically discover tools in this assembly
+// Configure MCP Server
+builder.Services
+    .AddMcpServer()
+    .WithStdioServerTransport() // Use stdio for communication with Cursor
+    .WithToolsFromAssembly(); // Automatically discover tools in this assembly
 
-        Console.WriteLine("Starting Comedy MCP Server..."); // Log server start initiation
-        var host = builder.Build();
+// Add services to the container.
+builder.Services.AddControllers();
 
-        // Add application lifetime logging
-        var logger = host.Services.GetRequiredService<ILogger<Program>>();
-        var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
-        lifetime.ApplicationStarted.Register(() => logger.LogInformation("Comedy MCP Server started successfully via stdio. Connect with an MCP client like the Inspector."));
-        lifetime.ApplicationStopping.Register(() => logger.LogInformation("Comedy MCP Server is stopping."));
-        lifetime.ApplicationStopped.Register(() => logger.LogInformation("Comedy MCP Server stopped."));
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
+var host = builder.Build();
 
-        // Run the host application
-        await host.RunAsync();
-    }
+await host.RunAsync();
 
-    // Helper method to fetch jokes asynchronously
-    public static async Task<string?> FetchJoke()
-    {
-        const string fallbackJoke = "Why did the programmer quit his job? He didn't get arrays.";
-        try
-        {
-            // Fetch a programming or miscellaneous joke, preferring safe-for-work content
-            var response = await Client.GetFromJsonAsync<JokeApiResponse>("https://v2.jokeapi.dev/joke/Programming,Miscellaneous?safe-mode");
+// --- Tool Definitions ---
 
-            if (response == null || response.Error)
-            {
-                Console.Error.WriteLine($"Joke API returned an error or null response. Falling back to default joke.");
-                return fallbackJoke;
-            }
-
-            // Format the joke based on whether it's single-line or setup/delivery
-            return response.Type == "single"
-                ? response.Joke
-                : $"{response.Setup} ... {response.Delivery}";
-        }
-        catch (HttpRequestException ex)
-        {
-            Console.Error.WriteLine($"HTTP request to Joke API failed: {ex.Message}. Falling back to default joke.");
-            return fallbackJoke;
-        }
-        catch (Exception ex) // Catch other potential errors (e.g., JSON parsing, timeouts)
-        {
-            Console.Error.WriteLine($"Failed to fetch or process joke: {ex.Message}. Falling back to default joke.");
-            return fallbackJoke;
-        }
-    }
-}
-
-// Define the MCP Tool Type container
 [McpServerToolType]
 public static class ComedyTool
 {
-    // Define the specific tool method callable by an MCP client
-    [McpServerTool, Description("Enhances a comment with a programming/misc joke. Tailors the tone based on keywords ('solo', 'lonely', 'troll', 'coworker').")]
-    public static async Task<string> EnhanceComment([Description("The comment to enhance.")] string comment)
+    // Tool to get a programming joke
+    [McpServerTool, Description("Gets a random programming joke.")]
+    public static async Task<string> GetProgrammingJoke(IServiceProvider serviceProvider)
     {
-        string input = comment?.Trim().ToLowerInvariant() ?? "no comment provided"; // Null check, trim, normalize
-        string joke = await Program.FetchJoke() ?? "Error fetching joke!"; // Fetch joke, use fallback from FetchJoke if needed
-
-        string enhancedComment;
-
-        if (input.Contains("solo") || input.Contains("lonely"))
+        var comedyService = serviceProvider.GetRequiredService<IComedyService>();
+        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        try
         {
-            enhancedComment = $"Solo dev boost requested for: '{comment}'. Laugh it off: {joke}";
+            // Using "programming" topic, though the API URL is specific
+            return await comedyService.GetFunnyCommentAsync("", "programming");
         }
-        else if (input.Contains("troll") || input.Contains("coworker"))
+        catch (Exception ex)
         {
-            enhancedComment = $"Troll attempt detected regarding: '{comment}'. Hit 'em with this: {joke}";
+            logger.LogError(ex, "Error getting programming joke.");
+            return "Couldn't fetch a joke right now, the programmer humor circuits are down!";
         }
-        else
-        {
-            enhancedComment = $"Received comment: '{comment}'. Here's a little spice: {joke}";
-        }
-
-        return enhancedComment;
     }
-} 
+
+    // Example tool showing how to access services
+    [McpServerTool, Description("Echoes the message back, using ILogger.")]
+    public static string EchoWithLog(string message, IServiceProvider serviceProvider)
+    {
+        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation($"Echoing message: {message}");
+        return $"Echo: {message}";
+    }
+}
