@@ -51,25 +51,91 @@ The server provides the following MCP tools:
 ## Setup and Configuration
 
 ### Prerequisites
-- .NET 6.0 or later
-- Node.js (for MCP inspector tool)
+- .NET 8.0 SDK or later
+- Node.js 14+ (for MCP inspector tool)
+- A code editor (preferably Cursor IDE for best integration)
+- Git (for version control)
 
-### Environment Files
-- `.env`: Contains environment-specific variables
-- `appsettings.json`: Main application settings
-- `appsettings.Development.json`: Development-specific settings
+### Installation Steps
+
+1. Clone the repository:
+```bash
+git clone [your-repository-url]
+cd ComedyMcpServer
+```
+
+2. Set up environment:
+   - Copy the example environment file:
+     ```bash
+     copy .env.example .env    # On Windows
+     # OR
+     cp .env.example .env     # On Unix-based systems
+     ```
+   - Update the `.env` file with your settings if needed
+
+3. Install dependencies:
+```bash
+dotnet restore
+```
+
+4. Build the project:
+```bash
+dotnet build
+```
 
 ### Running the Server
 
-1. Standard run:
+You have several options to run the server:
+
+1. **Development Mode**:
 ```bash
-dotnet run
+dotnet run --environment Development
 ```
 
-2. With MCP inspector:
+2. **With MCP Inspector** (recommended for debugging MCP tools):
 ```bash
 npx @modelcontextprotocol/inspector dotnet run
 ```
+
+3. **Production Mode**:
+```bash
+dotnet run --environment Production
+```
+
+### Verifying Installation
+
+1. Check the server is running:
+   - Open your browser to `http://localhost:5000` or the configured port
+   - You should see the message "Comedy MCP Server is running!"
+
+2. Access Swagger Documentation:
+   - Navigate to `http://localhost:5000/swagger`
+   - You should see the API documentation
+
+3. Test MCP Tools:
+   - Use the included test script:
+     ```bash
+     node test-mcp.js
+     ```
+   - Or use the MCP inspector interface if running with inspector
+
+### Troubleshooting
+
+Common issues and solutions:
+
+1. Port already in use:
+   - Change the port in `appsettings.json`
+   - Or stop the process using the current port
+
+2. Dependencies missing:
+   - Run `dotnet restore` again
+   - Check your .NET SDK version matches the project requirements
+
+3. Environment variables not loading:
+   - Ensure `.env` file exists and is properly formatted
+   - Restart the application after modifying environment files
+
+For more detailed issues, check the application logs in the console output.
 
 ## Development
 
