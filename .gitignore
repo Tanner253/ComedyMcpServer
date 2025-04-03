@@ -1,0 +1,95 @@
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.wasm
+
+# Static files
+*.css
+*.js
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Rr]elease/
+[Rr]eleases/
+[Xx]64/
+[Xx]86/
+[Aa]rm/
+[Aa]rm64/
+[Ww][Ii][Nn]32/
+[Ww][Ii][Nn]64/
+build/
+bld/
+[Bb]uild/
+[Bb]uild.[Ss]cripts/
+artifacts/
+
+# .NET Core temp / cache files
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.assets.json
+*.nuget.cache
+
+# Rider / Resharper specific files
+*.sln.iml
+*.suo
+*.user
+*.ReSharper
+*.idea
+*/cache/
+
+# Visual Studio specific files
+*.vs/
+*.VC.db
+*.suo
+*.ncb
+*_i.c
+*_p.c
+*_h.h
+*.pdb
+*.ipch
+*.aps
+*.sdf
+*.opensdf
+*.tlog
+*.log
+*.ilk
+*.psess
+*.visualState.xml
+TestResult.xml
+*.vspscc
+
+# User-specific files
+*.userprefs
+*.DS_Store
+
+# Environment specific files
+appsettings.Development.json
+appsettings.Local.json
+secrets.json 
