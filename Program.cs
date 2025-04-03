@@ -29,6 +29,17 @@ builder.Services
 // Add services to the container.
 builder.Services.AddControllers();
 
+// Configure CORS for MCP inspector
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -39,6 +50,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseCors(); // Enable CORS
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
@@ -55,6 +67,10 @@ await app.RunAsync();
 public static class ComedyTool
 {
     // Tool to get a programming joke
+    // Judge: "I sentence you to the maximum punishment..."
+    // Me (thinking): "Please be death, please be death..."
+    // Judge: "Learn Java!"
+    // Me: "Damn."
     [McpServerTool, Description("Gets a random programming joke.")]
     public static async Task<string> GetProgrammingJoke(IServiceProvider serviceProvider)
     {
